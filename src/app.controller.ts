@@ -1,4 +1,4 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Inject, Redirect } from '@nestjs/common';
 import { IAppService } from './app.service.interface';
 
 @Controller()
@@ -6,6 +6,10 @@ export class AppController {
   constructor(
     @Inject('IAppService') private readonly appService: IAppService
   ) {}
+
+  @Get('/')
+  @Redirect('/hello', 302)
+  root() {}
 
   @Get('states')
   async getBrazilStates() {
@@ -24,6 +28,11 @@ export class AppController {
   @Get('has-cache')
   async hasCache() {
     return { message: await this.appService.hasCache() ? 'Cache encontrado' : 'Cache não encontrado' };
+  }
+
+  @Get('hello')
+  getHello() {
+    return 'Hello World!';
   }
 
 }
