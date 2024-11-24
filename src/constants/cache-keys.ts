@@ -1,3 +1,3 @@
 export const CacheKeys = {
-    BRAZIL_STATES: 'brazilStates',
-  };
+  BRAZIL_STATES: 'brazilStates',
+};
