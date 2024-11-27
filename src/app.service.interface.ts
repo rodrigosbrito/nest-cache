@@ -1,5 +1,5 @@
-export interface IAppService {
-    getBrazilStates(): Promise<any>;
-    clearCache(): Promise<void>;
-    hasCache(): Promise<boolean>;
+export abstract class IAppService {
+  abstract getBrazilStates(): Promise<any>;
+  abstract clearCache(): Promise<void>;
+  abstract hasCache(): Promise<boolean>;
 }

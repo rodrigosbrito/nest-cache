@@ -1,38 +1,36 @@
 // test/unit/app.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
-import { AppService } from '../../src/app.service';
-import { CacheKeys } from '../../src/constants/cache-keys';
-import { ApiUrls } from '../../src/constants/api-urls';
+import { AppService } from 'src/app.service';
+import { CacheKeys } from 'src/constants/cache-keys';
+import { ApiUrls } from 'src/constants/api-urls';
 import axios from 'axios';
+import { RequiredCacheManager } from 'src/constants';
 
 jest.mock('axios');
 
 describe('AppService', () => {
   let service: AppService;
-  let cacheManager: Cache;
+  let cacheManager: RequiredCacheManager;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AppService,
         {
-          provide: CACHE_MANAGER,
-          useValue: {
+          provide: RequiredCacheManager,
+          useValue: (cacheManager = {
             get: jest.fn(),
             set: jest.fn(),
             reset: jest.fn(),
             store: {
               ttl: jest.fn(),
             },
-          },
+          } as any),
         },
       ],
     }).compile();
 
     service = module.get<AppService>(AppService);
-    cacheManager = module.get<Cache>(CACHE_MANAGER);
   });
 
   it('should be defined', () => {
@@ -59,7 +57,7 @@ describe('AppService', () => {
       const apiResponse = { data: [{ nome: 'São Paulo' }] };
       (axios.get as jest.Mock).mockResolvedValue(apiResponse);
       jest.spyOn(cacheManager, 'get').mockResolvedValue(null);
-      jest.spyOn(cacheManager, 'set').mockResolvedValue(undefined);
+      jest.spyOn(cacheManager, 'set').mockResolvedValue(undefined as never);
       jest.spyOn(cacheManager.store, 'ttl').mockResolvedValue(120000);
 
       // Act
@@ -68,14 +66,17 @@ describe('AppService', () => {
       // Assert
       expect(result).toEqual(apiResponse.data);
       expect(axios.get).toHaveBeenCalledWith(ApiUrls.BRAZIL_STATES);
-      expect(cacheManager.set).toHaveBeenCalledWith(CacheKeys.BRAZIL_STATES, apiResponse.data);
+      expect(cacheManager.set).toHaveBeenCalledWith(
+        CacheKeys.BRAZIL_STATES,
+        apiResponse.data,
+      );
     });
   });
 
   describe('clearCache', () => {
     it('should clear the cache', async () => {
       // Arrange
-      jest.spyOn(cacheManager, 'reset').mockResolvedValue(undefined);
+      jest.spyOn(cacheManager, 'reset').mockResolvedValue(undefined as never);
 
       // Act
       await service.clearCache();
@@ -88,7 +89,9 @@ describe('AppService', () => {
   describe('hasCache', () => {
     it('should return true if cache exists', async () => {
       // Arrange
-      jest.spyOn(cacheManager, 'get').mockResolvedValue([{ nome: 'São Paulo' }]);
+      jest
+        .spyOn(cacheManager, 'get')
+        .mockResolvedValue([{ nome: 'São Paulo' }]);
 
       // Act
       const result = await service.hasCache();
